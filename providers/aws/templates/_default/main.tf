@@ -11,7 +11,8 @@ terraform {
 
 # Provider definitions
 provider "aws" {
-
+  profile = "aws-cloud" # select the credentials profile(using the created terraform-container the default is a dummy profile for security reasons)
+  # region = "us-east-1"
 }
 
 # Use "terraform init" to init project and get provider packages

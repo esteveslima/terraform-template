@@ -1,4 +1,6 @@
-# **/.*/
-# !**/.vscode/
+# Ignore all hidden files and folders
+**/.*/
 
-**/.terraform/
+
+# Exceptions from ignore
+!**/.vscode/
