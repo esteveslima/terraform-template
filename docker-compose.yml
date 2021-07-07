@@ -1,4 +1,4 @@
-# docker-compose file setting up environment for terraform with other tools
+# Optional docker environment for terraform with other tools
 
 version: '3.8'
 services:

@@ -1,4 +1,4 @@
-# Setting up a terraform container, to encapsulate useful tools
+# Setting up a optional terraform container environment, to encapsulate useful tools
 
 FROM alpine:latest as alpineBuildStage
 

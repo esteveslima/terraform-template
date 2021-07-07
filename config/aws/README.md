@@ -1,4 +1,4 @@
-# AWS Deployment credentials
+# AWS Deployment credentials for optional docker environment
 
 ## (Inside this folder)Create a folder ".aws" with "credentials" file inside, with the following content:
 

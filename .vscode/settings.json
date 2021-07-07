@@ -1,4 +1,4 @@
-// Terraform must be installed on the host machine to make the autoformat work (using terraform only in a container may not work with vscode plugin)
+// Terraform must be installed on the host machine to make the autoformat work (in case of using terraform only in a container may not work with vscode plugin)
 {
     "terraform.languageServer": {
         "enabled": true,

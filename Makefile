@@ -8,7 +8,7 @@ COMPOSE_SERVICE_NAME = terraform-container
 clear:
 	find . -type d -name .terraform -prune -exec rm -rf {} \;
 
-# setup docker environment
+# setup optional docker environment
 up:
 	docker-compose up -d
 clean-up:
