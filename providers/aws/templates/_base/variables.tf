@@ -1,4 +1,4 @@
-# Variables declaration file for terraform
+# Variables declaration file for terraform, which can be used in other resources
 
 # The variables will be prompted for input on terraform command
 # Use ' terraform ... -var "<var_name> = <value>" ' flag to set a variable value directly without prompt for input 

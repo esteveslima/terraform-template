@@ -22,7 +22,9 @@ terraform {
 
 # Provider definitions
 provider "aws" {
-  # profile = "aws-cloud" # select the credentials profile(P.S.: For terraform-container the "default" aws profile is a dummy for safety reasons)
+  # # The AWS credentials profile can be selected directly or it could be mapped with a variable to multiple profiles representing multiple deployment environments
+  # profile = "aws-cloud" (P.S.: For terraform-container the "default" aws profile is a dummy for safety reasons, check the /config folder)
+
   # region  = "us-east-1"
 }
 
