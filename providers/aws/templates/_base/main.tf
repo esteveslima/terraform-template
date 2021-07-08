@@ -1,4 +1,15 @@
 terraform {
+  # # Setting the remote backend environment that stores the infrastructure state in the a cloud provider(terraform cloud recommended)
+  # # The infrastructure state should be saved on production environments, but a normal version control system may lead into sync problems    
+  # # Using remote backend requires to login with "terraform login" command and to setup credentials for cloud provider remotelly
+  # # Remove it to fallback to local backend and generate local(insecure) state files for development and testing
+  # backend "remote" {
+  #   organization = "existing_organization_name" # previously created on the provider cloud
+  #   workspaces {
+  #     name = "existing_workspace_name" # previously created on the provider cloud(?)
+  #   }
+  # }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -11,8 +22,8 @@ terraform {
 
 # Provider definitions
 provider "aws" {
-  profile = "aws-cloud" # select the credentials profile(the "default" aws profile for terraform-container is a dummy for safety reasons)
-  # region = "us-east-1"
+  # profile = "aws-cloud" # select the credentials profile(P.S.: For terraform-container the "default" aws profile is a dummy for safety reasons)
+  # region  = "us-east-1"
 }
 
 # Use "terraform init" to init project and get provider packages
@@ -32,5 +43,3 @@ resource "aws_<resource>" "resource_name" {
 # Generated .tfstate files are important to keep track of changes, removing them may cause sync problems
 # Use "terraform show" to visualize information about the current deployed infrastructure
 # Use "terraform state <subcommand>" to visualize advanced information about the state of the infrastructure
-
-

@@ -9,3 +9,9 @@ output "output_name" {
   # value       = "value"
   # sensitive   = false
 }
+
+# output "output2_name" {
+#   # description = "some_description"
+#   # value       = "value"
+#   # sensitive   = false
+# }

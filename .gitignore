@@ -1,6 +1,8 @@
-# Ignore all hidden files and folders
+# Ignore all hidden folders(begins with '.')
 **/.*/
 
+# Ignore state files as they should be stored remotelly
+**/*.tfstate*
 
 # Exceptions from ignore
 !**/.vscode/
