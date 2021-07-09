@@ -1,21 +1,25 @@
-# Variables declaration file for terraform, which can be used in other resources
-
-# The variables will be prompted for input on terraform command
-# Use ' terraform ... -var "<var_name> = <value>" ' flag to set a variable value directly without prompt for input 
-# Use ' terraform ... -var-file "<path_to_file>.tfvars" ' flag to select a variable assignment file (defaults to terraform.tfvars and may be useful to parametrize multiple environments/configurations)
+# Variables declaration, which can be used in other resources
+# The variables will be prompted for input on terraform command if not provided by '-var' or '-var-file' flag
 
 
 
 variable "var_name" {
   # description = "some_description"
-  # default     = "value"
-  # type        = String
+  # type        = string
   # sensitive   = false
+  # default     = "value"
 }
 
-# variable "var2_name" {
-#   # description = "some_description"
-#   # default     = "value"
-#   # type        = String
-#   # sensitive   = false
-# }
+variable "profile" {
+  description = "aws credentials profile"
+  type        = string
+  sensitive   = false
+  # default     = 
+}
+
+variable "region" {
+  description = "default region"
+  type        = string
+  sensitive   = false
+  # default     = 
+}

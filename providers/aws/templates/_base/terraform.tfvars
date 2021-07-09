@@ -1,7 +1,9 @@
-# Assignment file for created variables on terraform
-# To use multiple configurations, create a different '.tfvars' file and select it with ' ... -var-file "<path_to_file.tfvars>" ' flag
+# Default assignment file for variables declared
+# For multiple configurations, select a different '.tfvars' file with ' ... -var-file "<path_to_file.tfvars>" ' flag
 
 
 
 var_name=foo
-# var2_name=bar
+
+profile="aws-cloud" # (P.S.: For terraform-container the "default" aws profile is a dummy for safety reasons, check the /config folder)
+region="us-east-1"
