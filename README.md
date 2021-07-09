@@ -28,6 +28,6 @@ PS: Generated .tfstate files are important to keep track of changes, losing them
 //          https://www.terraform.io/docs/cli/commands/graph.html
 //          local-exec and remote-exec
 //          data sources
-//          
-//          
+//          s3 backend with mfa(?)
+//          use official modules https://registry.terraform.io/browse/modules
 //          

@@ -1,4 +1,4 @@
-# Create the backend resources(s3,ddb)
+# Create the S3 backend resources
 
 terraform {
   required_providers {
