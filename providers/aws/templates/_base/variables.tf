@@ -1,4 +1,4 @@
-# Variables declaration, which can be used in other resources
+# Variables declaration for module input, which can be used in other resources
 # The variables will be prompted for input on terraform command if not provided by '-var' or '-var-file' flag
 
 # TODO: change constant variables to locals
