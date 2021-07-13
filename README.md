@@ -24,10 +24,11 @@ PS: Generated .tfstate files are important to keep track of changes, losing them
 //          visualization tools for infrastructure(?)
 //          search more tools for terraform(?)
 
+//          workspaces
 //          "monorepo"?
 //          https://www.terraform.io/docs/cli/commands/graph.html
 //          local-exec and remote-exec
 //          data sources
 //          s3 backend with mfa(?)
 //          use official modules https://registry.terraform.io/browse/modules
-//          
+//          enhance template and examples with terraform native functions and functionalities(test with "terraform console")

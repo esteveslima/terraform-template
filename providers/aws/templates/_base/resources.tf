@@ -1,7 +1,12 @@
+# Constants assignment
+locals {
+  some_local = {
+    Name = var.var_name # Assigning with created variable
+  }
+}
+
 resource "aws_<resource>" "resource_name" {
   # ...
 
-  tags = {
-    Name = var.var_name # Assigning created variable to a resource definition
-  }
+  tags = local.some_local
 }

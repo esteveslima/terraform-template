@@ -1,4 +1,5 @@
 // Terraform must be installed on the host machine to make the autoformat work (in case of using terraform only in a container may not work with vscode plugin)
+// Use "terraform fmt" to format the code manually
 {
     "terraform.languageServer": {
         "enabled": true,
