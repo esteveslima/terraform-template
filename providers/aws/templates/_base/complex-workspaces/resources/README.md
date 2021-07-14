@@ -1,0 +1,1 @@
+Project's independent resources, shared by various components and modules

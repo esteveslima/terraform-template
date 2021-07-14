@@ -1,0 +1,1 @@
+Project's modules that can be referenced in root project or other modules, promoting modularization and dry code

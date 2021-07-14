@@ -6,7 +6,7 @@ COMPOSE_SERVICE_NAME = terraform-container
 
 # clear temp files
 clear:
-	find . -type d -name .terraform -prune -exec rm -rf {} \;
+	sudo find . -type d -name .terraform -prune -exec rm -rf {} \;
 
 # setup optional docker environment
 up:

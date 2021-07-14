@@ -1,6 +1,7 @@
 # terraform-template
 
 
+
 ### Main commands handbook
 ```
  - 'terraform init'                                                        : init project, getting provider packages and importing modules
@@ -29,9 +30,20 @@
 Generated .tfstate files are important to keep track of changes, losing them may cause sync problems. 
 For real projects it is required to use remote backends to store state, due to it's transparency with sensible information in the file.
 
-One approach to manage multiple environments/stages is to use multiple .tfvars files(to assign stage specific variables) with parametrized parameters alongside workspaces(to store different stage files). This would require to select the desired environment/stage workspace and then run the commands selecting the correspondent .tfvars file.
+<br/><br/><br/>
+
+### Managing multiple environments/stages:
+
+For a single account one approach is to use multiple .tfvars files(to assign stage specific variables) with parametrized parameters alongside workspaces(to store different stage files). This would require to select the desired environment/stage workspace and then run the commands selecting the correspondent .tfvars file.
 
 Another approach could be to duplicate projects files in different paths to ensure enviroment segregation (e.g: projA/dev/... projA/prod/...).
+
+The first approach would use the same code but would require attention to not make a mistake using the wrong workspace, the second approach has more secure environment segregation but relies on code replication.
+
+Finally, for multiple accounts, the credentials profile could be parametrized using variables.
+
+
+
 
 
 

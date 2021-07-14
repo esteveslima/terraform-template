@@ -1,0 +1,1 @@
+# Base template managing environment with workspaces
