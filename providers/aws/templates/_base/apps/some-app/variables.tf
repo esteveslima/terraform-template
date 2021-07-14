@@ -5,22 +5,17 @@
 # better name would be input.tf because those are the input for the module(root or leaf)
 
 variable "var_name" {
-  # description = "some_description"
-  # type        = string
-  # sensitive   = false
-  # default     = "value"
+  description = "some variable"
+  type        = string
 }
 
 variable "profile" {
   description = "aws credentials profile"
   type        = string
-  sensitive   = false
-  # default     = 
+  default     = "default"
 }
 
 variable "region" {
   description = "default region"
   type        = string
-  sensitive   = false
-  # default     = 
 }

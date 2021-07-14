@@ -6,7 +6,8 @@ FROM alpine:latest as alpineBuildStage
 RUN apk add --no-cache curl && \
     apk add --no-cache bash && \
     apk add --no-cache nano && \
-    apk add --no-cache sudo
+    apk add --no-cache sudo && \
+    apk add --no-cache git
 
 # Copy terraform executable to bin folder
 COPY --from=hashicorp/terraform:latest /bin/terraform /usr/bin/terraform

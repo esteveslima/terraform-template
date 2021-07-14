@@ -4,12 +4,6 @@
 
 output "output_name" {
   # description = "some_description"
-  # value       = "value"
+  value       = "value"
   # sensitive   = false
 }
-
-# output "output2_name" {
-#   # description = "some_description"
-#   # value       = "value"
-#   # sensitive   = false
-# }
