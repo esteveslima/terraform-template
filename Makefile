@@ -10,7 +10,7 @@ clear:
 
 # setup optional docker environment
 up:
-	docker-compose up -d
+	docker-compose up --detach
 clean-up:
 	docker-compose up --detach --build --force-recreate --always-recreate-deps
 down:

@@ -9,12 +9,9 @@ RUN apk add --no-cache curl && \
     apk add --no-cache sudo && \
     apk add --no-cache git
 
-# Copy terraform executable to bin folder
-COPY --from=hashicorp/terraform:latest /bin/terraform /usr/bin/terraform
-
-### OPTIONAL TOOLS ###
-# # Install graph tool for generating terraform images
+# Install graph tool for generating terraform images
 RUN apk add --update --no-cache graphviz ttf-freefont
+
 # Install AWS-CLI and glibc for alpine compatibility
 ENV GLIBC_VER=2.31-r0
 RUN apk --no-cache add binutils && \
@@ -34,9 +31,19 @@ RUN apk --no-cache add binutils && \
         glibc-*.apk && \
     apk --no-cache del binutils && \
     rm -rf /var/cache/apk/*
-###
 
-# Config user
+
+# Install terraform
+# # Copy latest terraform executable from official docker image to bin folder - DISABLED(using tfswitch)
+# COPY --from=hashicorp/terraform:latest /bin/terraform /usr/bin/terraform
+
+# Install tfswitch to be able to run multiple terraform versions(requires glibc installed)
+RUN curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash && \
+    tfswitch --latest
+
+
+
+# Config user bash
 RUN echo "complete -d cd" >> ~/.bashrc
 RUN echo "PS1='\e[1;30m(\t)[\w]\$ \e[0m'" >> ~/.bashrc; source ~/.bashrc
 
