@@ -4,5 +4,8 @@
 # Ignore state files as they should be stored remotelly
 **/*.tfstate*
 
+# Ignore misc files
+**/*.svg
+
 # Exceptions from ignore
 !**/.vscode/
