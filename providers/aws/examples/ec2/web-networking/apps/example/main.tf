@@ -1,5 +1,6 @@
-# Implementing the scenario: https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html
-# Route table config: https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html#nat-gateway-scenarios
+# Implementing a webserver cenario with public and private servers, in addition to a bastion server for monitoring
+
+# TODO: split in modules
 
 terraform {
   required_providers {
@@ -14,14 +15,17 @@ terraform {
 
 provider "aws" {
   profile = var.profile
-  region  = "us-east-1"
+  region  = var.region
 }
 
 locals {
 
 }
 
+
+
 ####################################################################################################
+
 
 
 # Setup base network
@@ -44,7 +48,7 @@ resource "aws_internet_gateway" "example_igw" {
 
 
 
-# (TODO: enhance understanding of networking)
+####################################################################################################
 
 
 
@@ -77,34 +81,6 @@ resource "aws_route_table_association" "example_route_table_association_public_s
   subnet_id      = aws_subnet.example_subnet_public.id
   route_table_id = aws_route_table.example_route_table_public_subnet.id
 }
-# Create the security group for the public instances(allow all traffic)
-resource "aws_security_group" "example_security_group_public_instances" {
-  name        = "example_security_group_public_instances"
-  description = "Allow all inbound/outbound traffic"
-  vpc_id      = aws_vpc.example_vpc.id
-
-  ingress {
-    description      = "allow all"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  egress {
-    description      = "allow all"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = {
-    Name = "example_security_group_public_instances"
-  }
-}
 
 
 
@@ -119,19 +95,19 @@ resource "aws_subnet" "example_subnet_private" {
   }
 }
 # Create the elastic ip for the nat(providing public ip)
-resource "aws_eip" "example_eip" {
+resource "aws_eip" "example_eip_nat" {
   vpc              = true
   public_ipv4_pool = "amazon"
 
   tags = {
-    Name = "example_eip"
+    Name = "example_eip_nat"
   }
 }
-# Create the nat for the private subnet
+# Create the nat for the private subnet(must be created on a public subnet)
 resource "aws_nat_gateway" "example_nat_public" {
   connectivity_type = "public"
-  allocation_id     = aws_eip.example_eip.id
-  subnet_id         = aws_subnet.example_subnet_private.id
+  allocation_id     = aws_eip.example_eip_nat.id
+  subnet_id         = aws_subnet.example_subnet_public.id
 
   depends_on = [aws_internet_gateway.example_igw]
   tags = {
@@ -156,14 +132,186 @@ resource "aws_route_table_association" "example_route_table_association_private_
   subnet_id      = aws_subnet.example_subnet_private.id
   route_table_id = aws_route_table.example_route_table_private_subnet.id
 }
-# Create the security group for the private instances(allow outbound traffic)
-resource "aws_security_group" "example_security_group_private_instances" {
-  name        = "example_security_group_private_instances"
+
+
+
+####################################################################################################
+
+
+
+# Setup bastion host(instance security must be reinforced)
+# Create the security group for the bastion
+resource "aws_security_group" "example_security_group_bastion" {
+  name        = "example_security_group_bastion"
   description = "Allow only outbound traffic"
   vpc_id      = aws_vpc.example_vpc.id
 
+  ingress {
+    description      = "allow icmp(ping) from secure host/user"
+    from_port        = -1
+    to_port          = -1
+    protocol         = "icmp"
+    cidr_blocks      = ["0.0.0.0/0"] # Set access only for trusted known users, do not allow all ip adresses(0.0.0.0/0) like this example
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description      = "allow ssh from secure host/user"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"] # Set access only for trusted known users, do not allow all ip adresses(0.0.0.0/0) like this example
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
   egress {
-    description      = "allow all"
+    description      = "allow all outbound traffic"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "example_security_group_bastion"
+  }
+}
+# Create bastion key pair
+resource "aws_key_pair" "example_key_pair_bastion" {
+  key_name   = "example_key_pair_bastion"
+  public_key = file("${path.module}/keypairs/bastion_id_rsa.pub")
+}
+# Create bastion instance
+resource "aws_instance" "example_ec2_bastion" {
+  ami           = var.instance_ami
+  instance_type = "t2.micro"
+
+  subnet_id              = aws_subnet.example_subnet_public.id
+  vpc_security_group_ids = [aws_security_group.example_security_group_bastion.id]
+  key_name               = aws_key_pair.example_key_pair_bastion.key_name
+
+  tags = {
+    Name = "ec2-example-bastion"
+  }
+}
+# Create the elastic ip for the bastion
+resource "aws_eip" "example_eip_bastion" {
+  vpc              = true
+  public_ipv4_pool = "amazon"
+
+  tags = {
+    Name = "example_eip_bastion"
+  }
+}
+# Assign elastic ip to bastion instance
+resource "aws_eip_association" "example_eip_bastion_association" {
+  instance_id   = aws_instance.example_ec2_bastion.id
+  allocation_id = aws_eip.example_eip_bastion.id
+}
+
+
+####################################################################################################
+
+
+
+# Setup EC2 Instances
+
+# Setup security groups for instances
+# Create the basic security group for the instances
+resource "aws_security_group" "example_security_group_base_instances" {
+  name        = "example_security_group_base_instances"
+  description = "Allow only outbound traffic"
+  vpc_id      = aws_vpc.example_vpc.id
+
+  ingress {
+    description     = "allow icmp(ping) from bastion"
+    from_port       = -1
+    to_port         = -1
+    protocol        = "icmp"
+    security_groups = [aws_security_group.example_security_group_bastion.id] # from bastion security group access only        
+  }
+  ingress {
+    description     = "allow ssh from bastion"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.example_security_group_bastion.id] # from bastion security group access only    
+  }
+
+  egress {
+    description      = "allow all outbound traffic"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "example_security_group_base_instances"
+  }
+}
+# Create the security group for the public instances(webserver)
+resource "aws_security_group" "example_security_group_public_instances" {
+  name        = "example_security_group_public_instances"
+  description = "Allow all inbound/outbound traffic"
+  vpc_id      = aws_vpc.example_vpc.id
+
+  ingress {
+    description      = "allow http"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description      = "allow https"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description      = "allow arbitrary port"
+    from_port        = 5000
+    to_port          = 5000
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    description      = "allow all outbound traffic"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "example_security_group_public_instances"
+  }
+}
+# Create the security group for the private instances(back services)
+resource "aws_security_group" "example_security_group_private_instances" {
+  name        = "example_security_group_private_instances"
+  description = "Allow all inbound/outbound traffic"
+  vpc_id      = aws_vpc.example_vpc.id
+
+  ingress {
+    description      = "allow arbitrary private ports for services"
+    from_port        = 8000
+    to_port          = 8080
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    description      = "allow all outbound traffic"
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
@@ -176,46 +324,44 @@ resource "aws_security_group" "example_security_group_private_instances" {
   }
 }
 
+# Create apps key pair(using the same key pair for all instances for the sake of the example)
+resource "aws_key_pair" "example_key_pair_apps" {
+  key_name   = "example_key_pair_apps"
+  public_key = file("${path.module}/keypairs/apps_id_rsa.pub")
+}
 
 
-#(TODO: implement load balancer for public subnet instances)
-#(TODO: maintenance/ssh entry point for instances public or private)
 
-
-
-# Setup EC2 
-
-# # Fetch instance AMI(could'nt make it work properly)
-# data "aws_ami" "ami_amz_t2micro" {
-#   # most_recent = true
-#   # owners      = [""]  
-
-#   # filter {
-#   #   name   = ""
-#   #   values = [""]
-#   # }
-# }
-
+# Create ec2 instances with the created network infrastructure
+# webservers(backend/frontend)
 resource "aws_instance" "example_ec2_public" {
-  ami           = "ami-0dc2d3e4c0f9ebd18"
+  ami           = var.instance_ami
   instance_type = "t2.micro"
   count         = 2
 
-  subnet_id              = aws_subnet.example_subnet_public.id
-  vpc_security_group_ids = [aws_security_group.example_security_group_public_instances.id]
+  subnet_id = aws_subnet.example_subnet_public.id
+  vpc_security_group_ids = [
+    aws_security_group.example_security_group_base_instances.id,
+    aws_security_group.example_security_group_public_instances.id
+  ]
+  key_name = aws_key_pair.example_key_pair_apps.key_name
 
   tags = {
     Name = "ec2-example-public_${count.index}"
   }
 }
-
+# private resources(databases/workers)
 resource "aws_instance" "example_ec2_private" {
-  ami           = "ami-0dc2d3e4c0f9ebd18"
+  ami           = var.instance_ami
   instance_type = "t2.micro"
   count         = 2
 
-  subnet_id              = aws_subnet.example_subnet_private.id
-  vpc_security_group_ids = [aws_security_group.example_security_group_private_instances.id]
+  subnet_id = aws_subnet.example_subnet_private.id
+  vpc_security_group_ids = [
+    aws_security_group.example_security_group_base_instances.id,
+    aws_security_group.example_security_group_private_instances.id
+  ]
+  key_name = aws_key_pair.example_key_pair_apps.key_name
 
   tags = {
     Name = "ec2-example-private_${count.index}"

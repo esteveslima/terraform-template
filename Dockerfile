@@ -7,6 +7,7 @@ RUN apk add --no-cache curl && \
     apk add --no-cache bash && \
     apk add --no-cache nano && \
     apk add --no-cache sudo && \
+    apk add --no-cache openssh && \
     apk add --no-cache git
 
 # Install graph tool for generating terraform images
