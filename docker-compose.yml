@@ -11,5 +11,6 @@ services:
         volumes:
             - ./:/terraform-template                                    # Hosting the project folder as volume
             - ./config/aws/.aws:/root/.aws                              # Setting up AWS credentials inside the container(~/.aws)
+            - /var/run/docker.sock:/var/run/docker.sock                 # Bind host docker socket to the container(enable docker commands to host machine)
         working_dir: /terraform-template
         restart: "no"

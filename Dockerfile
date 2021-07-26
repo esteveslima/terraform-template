@@ -10,6 +10,10 @@ RUN apk add --no-cache curl && \
     apk add --no-cache openssh && \
     apk add --no-cache git
 
+# Install docker CLI(daemon binded to the host machine using volumes in compose file)
+RUN apk add --update docker openrc && \
+    rc-update add docker boot
+
 # Install graph tool for generating terraform images
 RUN apk add --update --no-cache graphviz ttf-freefont
 
