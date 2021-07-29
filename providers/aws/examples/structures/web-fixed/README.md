@@ -13,7 +13,8 @@ https://www.draw.io/?splash=0&libs=aws4
 - Route tables route traffic for subnets
 - Public subnets for webservers accessible from the internet, instances should be accessible from the internet only on allowed ports on "public" security group(80,443,5000)
 - Private subnets for databases and workers instances whithout access from the internet, only a set of ports(8000~8080) allowed on the "private" security group for access throught private network
-- NAT Gatewayto provide only outbound access to the private subnet
+- NAT Gateway to provide only outbound access to the private subnet
+  - NAT gateways are expensive, an alternative in cases where is not critically required to fully isolate resources from the internet could be public subnets with tight SG/NACLs access rules
 - Elastic IP's to set a fixed IP for strategic resources
 - Implemented Bastion instance host for monitoring(public and private subnet instances are acessible throught port 22 only from bastion security group)
 - Key pairs for ssh access (dummy generated with at `/keypairs/generate-keypairs.sh` script)
