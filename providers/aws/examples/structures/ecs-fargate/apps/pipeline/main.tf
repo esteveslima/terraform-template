@@ -1,6 +1,4 @@
-# Implementing ecs pipeline
-
-# TODO: split in modules
+# Implementing ecs pipeline(objects may be parametrized by environment/workspace)
 
 terraform {
   required_providers {
@@ -18,8 +16,22 @@ provider "aws" {
   region  = var.region
 }
 
-locals {
 
+####################################################################################################
+
+
+
+locals {
+  ecs_cluster_name    = "example_ecs_cluster"
+  ecs_service_name    = "example_ecs_service"
+  ecs_container_name  = "example_ecs_container"
+  ecr_repository_name = "example_ecr_repository"
+
+
+
+  # There is a required manual step to complete the CodeStar connection between AWS and provider(github) on the pipeline settings console
+  git_repository = var.git_repository
+  git_branch     = var.git_branch
 }
 
 
@@ -27,11 +39,29 @@ locals {
 ####################################################################################################
 
 
+
 # Data sources
 
-data "aws_caller_identity" "example_data_source_account" {}
 
-data "aws_region" "example_data_source_region" {}
+#
+
+
+
+####################################################################################################
+
+
+
+# Setup common basic resources
+
+
+resource "aws_s3_bucket" "example_bucket_pipeline" {
+  bucket = "example-bucket-pipeline"
+  acl    = "private"
+
+  tags = {
+    Name = "example_bucket_pipeline"
+  }
+}
 
 
 
@@ -40,195 +70,32 @@ data "aws_region" "example_data_source_region" {}
 
 
 # Setup code source
-# There is a required manual step to complete the CodeStar connection between AWS and provider(github) on the console settings
 
-resource "aws_codestarconnections_connection" "example_codestar_connection" {
-  name          = "example_codestar_connection"
-  provider_type = "GitHub"
 
-  tags = {
-    Name = "example_codestar_connection"
-  }
+
+# There is a required manual step to complete the CodeStar connection between AWS and provider(github) on the pipeline settings console
+module "example_module_codesource" {
+  source = "../../modules/codesource"
+
 }
 
 
 
-
 ####################################################################################################
+
 
 
 # Setup code build
 
 
-resource "aws_s3_bucket" "example_bucket_pipeline" {
-  bucket = "example-bucket-pipeline"
-  acl    = "private"
-}
 
+module "example_module_codebuild" {
+  source = "../../modules/codebuild"
 
-// TODO: fix iam orles with data sources
-resource "aws_iam_role" "example_role_code_build" {
-  name = "example_role_code_build"
-
-  assume_role_policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Principal" : {
-          "Service" : "codebuild.amazonaws.com"
-        },
-        "Action" : "sts:AssumeRole"
-      }
-    ]
-  })
-}
-resource "aws_iam_role_policy" "example_role_policy_code_build" {
-  role = aws_iam_role.example_role_code_build.name
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Resource" : [
-          "*"
-        ],
-        "Action" : [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-      },
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:*"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.example_bucket_pipeline.arn}",
-          "${aws_s3_bucket.example_bucket_pipeline.arn}/*"
-        ]
-      },
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetRepositoryPolicy",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:BatchGetImage",
-          "ecr:GetLifecyclePolicy",
-          "ecr:GetLifecyclePolicyPreview",
-          "ecr:ListTagsForResource",
-          "ecr:DescribeImageScanFindings",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ],
-        "Resource" : "*"
-      }
-    ]
-  })
-
-}
-
-# resource "aws_codebuild_source_credential" "example" {
-#   auth_type   = "PERSONAL_ACCESS_TOKEN"
-#   server_type = "GITHUB"
-#   token       = "example"
-# }
-
-resource "aws_codebuild_project" "example_codebuild_project" {
-  name        = "example_codebuild_project"
-  description = "example_codebuild_project"
-
-  build_timeout          = 5
-  concurrent_build_limit = 1
-  service_role           = aws_iam_role.example_role_code_build.arn
-
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  cache {
-    type     = "S3" # recommended for small builds
-    location = aws_s3_bucket.example_bucket_pipeline.bucket
-  }
-
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:4.0"
-    type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "CODEBUILD"
-    privileged_mode             = true
-
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID"
-      value = data.aws_caller_identity.example_data_source_account.account_id
-    }
-    environment_variable {
-      name  = "AWS_REGION"
-      value = data.aws_region.example_data_source_region.name
-    }
-    environment_variable {
-      name  = "IMAGE_REPOSITORY"
-      value = "example_ecr_repository"
-    }
-    environment_variable {
-      name  = "IMAGE_TAG"
-      value = "latest"
-    }
-    environment_variable {
-      name  = "CONTAINER_NAME"
-      value = "example_ecs_service"
-    }
-  }
-
-  logs_config {
-    cloudwatch_logs {
-      group_name  = "example_codebuild_project_log_group"
-      stream_name = "example_codebuild_project_log_stream"
-    }
-
-    s3_logs {
-      status   = "ENABLED"
-      location = "${aws_s3_bucket.example_bucket_pipeline.id}/build-log"
-    }
-  }
-
-  # TODO: with data sources
-  # vpc_config {
-  #   vpc_id = aws_vpc.example.id
-
-  #   subnets = [
-  #     aws_subnet.example1.id,
-  #     aws_subnet.example2.id,
-  #   ]
-
-  #   security_group_ids = [
-  #     aws_security_group.example1.id,
-  #     aws_security_group.example2.id,
-  #   ]
-  # }
-
-  source {
-    type            = "GITHUB"
-    location        = "https://github.com/esteveslima-solvimm/test-pipeline.git"
-    git_clone_depth = 1
-    # buildspec       =  # normally buildspec.yml is specified in the repository
-  }
-
-  source_version = "master"
-
-  tags = {
-    Name = "example_codebuild_project"
-  }
+  git_repository      = local.git_repository
+  bucket_pipeline     = aws_s3_bucket.example_bucket_pipeline
+  ecs_container_name  = local.ecs_container_name
+  ecr_repository_name = local.ecr_repository_name
 }
 
 
@@ -236,10 +103,12 @@ resource "aws_codebuild_project" "example_codebuild_project" {
 ####################################################################################################
 
 
+
 # Setup code deploy
 
 
-#
+
+# Not using, setting ECS as deployment provider
 
 
 ####################################################################################################
@@ -249,11 +118,6 @@ resource "aws_codebuild_project" "example_codebuild_project" {
 # Setup code pipeline
 
 
-
-# resource "aws_s3_bucket" "example_codepipeline_bucket" {
-#   bucket = "example-codepipeline-bucket"
-#   acl    = "private"
-# }
 
 resource "aws_iam_role" "example_codepipeline_role" {
   name = "test-role"
@@ -280,6 +144,10 @@ resource "aws_iam_role_policy" "example_codepipeline_policy" {
     "Version" : "2012-10-17",
     "Statement" : [
       {
+        "Resource" : [
+          "${aws_s3_bucket.example_bucket_pipeline.arn}",
+          "${aws_s3_bucket.example_bucket_pipeline.arn}/*"
+        ]
         "Effect" : "Allow",
         "Action" : [
           "s3:GetObject",
@@ -288,27 +156,25 @@ resource "aws_iam_role_policy" "example_codepipeline_policy" {
           "s3:PutObjectAcl",
           "s3:PutObject"
         ],
-        "Resource" : [
-          "${aws_s3_bucket.example_bucket_pipeline.arn}",
-          "${aws_s3_bucket.example_bucket_pipeline.arn}/*"
-        ]
       },
       {
+        "Resource" : "${module.example_module_codesource.codestar_arn}"
         "Effect" : "Allow",
         "Action" : [
           "codestar-connections:UseConnection"
         ],
-        "Resource" : "${aws_codestarconnections_connection.example_codestar_connection.arn}"
       },
       {
+        "Resource" : "*"
         "Effect" : "Allow",
         "Action" : [
           "codebuild:BatchGetBuilds",
           "codebuild:StartBuild"
         ],
-        "Resource" : "*"
       },
       {
+        "Resource" : "*",
+        "Effect" : "Allow"
         "Action" : [
           "codedeploy:CreateDeployment",
           "codedeploy:GetApplicationRevision",
@@ -317,17 +183,10 @@ resource "aws_iam_role_policy" "example_codepipeline_policy" {
           "codedeploy:GetDeploymentConfig",
           "codedeploy:RegisterApplicationRevision"
         ],
+      },
+      {
         "Resource" : "*",
         "Effect" : "Allow"
-      },
-      {
-        "Action" : [
-          "iam:PassRole"
-        ],
-        "Effect" : "Allow",
-        "Resource" : "*",
-      },
-      {
         "Action" : [
           "ecs:DescribeServices",
           "ecs:DescribeTaskDefinition",
@@ -336,8 +195,13 @@ resource "aws_iam_role_policy" "example_codepipeline_policy" {
           "ecs:RegisterTaskDefinition",
           "ecs:UpdateService"
         ],
+      },
+      {
         "Resource" : "*",
-        "Effect" : "Allow"
+        "Effect" : "Allow",
+        "Action" : [
+          "iam:PassRole"
+        ],
       }
     ]
   })
@@ -372,12 +236,12 @@ resource "aws_codepipeline" "example_codepipeline" {
       owner            = "AWS"
       provider         = "CodeStarSourceConnection"
       version          = "1"
-      output_artifacts = ["example_source_output"]
+      output_artifacts = ["example_source_output_name"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.example_codestar_connection.arn
-        FullRepositoryId = "esteveslima-solvimm/test-pipeline"
-        BranchName       = "main"
+        ConnectionArn    = module.example_module_codesource.codestar_arn
+        FullRepositoryId = local.git_repository
+        BranchName       = local.git_branch
         DetectChanges    = true
       }
     }
@@ -391,12 +255,12 @@ resource "aws_codepipeline" "example_codepipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["example_source_output"]
-      output_artifacts = ["example_build_output"]
+      input_artifacts  = ["example_source_output_name"]
+      output_artifacts = ["example_build_output_name"]
       version          = "1"
 
       configuration = {
-        ProjectName = "example_codebuild_project"
+        ProjectName = module.example_module_codebuild.codebuild_name
         # EnvironmentVariables =
       }
     }
@@ -410,13 +274,13 @@ resource "aws_codepipeline" "example_codepipeline" {
       category        = "Deploy"
       owner           = "AWS"
       provider        = "ECS"
-      input_artifacts = ["example_build_output"]
+      input_artifacts = ["example_build_output_name"]
       version         = "1"
 
       configuration = {
-        ClusterName = "example_ecs_cluster" # TODO: replace with data source
-        ServiceName = "example_ecs_service" # TODO: replace with data source
-        # FileName  = # imagedefinitions.json is created with buildspec.yml
+        ClusterName = local.ecs_cluster_name
+        ServiceName = local.ecs_service_name
+        # FileName  = # imagedefinitions.json is created in buildspec.yml
       }
     }
   }
@@ -429,11 +293,3 @@ resource "aws_codepipeline" "example_codepipeline" {
     Name = "example_codepipeline"
   }
 }
-
-
-
-####################################################################################################
-
-
-
-# Setup pipeline webhook trigger

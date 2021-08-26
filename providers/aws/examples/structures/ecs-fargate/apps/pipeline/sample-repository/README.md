@@ -1,1 +1,2 @@
-### The contents of this folder should be used in a repository to test this pipeline example 
+### The contents of this folder should be used in a repository to simulate and test this pipeline example alongside ecs
+### update variable "git_repository" and "git_branch"

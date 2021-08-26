@@ -43,7 +43,11 @@ The first approach would use the same code but would require attention to not ma
 Finally, for multiple accounts, the credentials profile could be parametrized using variables.
 
 
+<br/><br/><br/>
 
+### Notes:
+
+Usually the main structure is splitted in multiple atomic structures. This way the code becomes more modular, with reduced blast radius and with separation of concerns. It's a good aidea to documantate the deployment order as this may vary between infrastructures, but naturally the base resources are deployed first.
 
 
 

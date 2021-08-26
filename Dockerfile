@@ -14,8 +14,8 @@ RUN apk add --no-cache curl && \
 RUN apk add --update docker openrc && \
     rc-update add docker boot
 
-# Install graph tool for generating terraform images
-RUN apk add --update --no-cache graphviz ttf-freefont
+# #(optional) Install graph tool for generating terraform images
+# RUN apk add --update --no-cache graphviz ttf-freefont
 
 # Install AWS-CLI and glibc for alpine compatibility
 ENV GLIBC_VER=2.31-r0
@@ -41,7 +41,6 @@ RUN apk --no-cache add binutils && \
 # Install terraform
 # # Copy latest terraform executable from official docker image to bin folder - DISABLED(using tfswitch)
 # COPY --from=hashicorp/terraform:latest /bin/terraform /usr/bin/terraform
-
 # Install tfswitch to be able to run multiple terraform versions(requires glibc installed)
 RUN curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash && \
     tfswitch --latest
