@@ -1,25 +1,24 @@
+# ECS Build definition with docker for AWS Code Pipeline
+
 version: 0.2
 
 phases:
   pre_build:
-    commands:
-      - echo pre-build started on `date`
+    commands:      
       - echo Logging in to Amazon ECR...
-      #- aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-      - docker login --username AWS --password $(aws ecr get-login-password --region $AWS_REGION) $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      # - docker login --username AWS --password $(aws ecr get-login-password --region $AWS_REGION) $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
   build:
-    commands:
-      - echo build started on `date`
-      - echo Building the Docker image...          
-      - docker build -t $CONTAINER_NAME:$IMAGE_TAG .
-      - docker tag $CONTAINER_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:$IMAGE_TAG      
+    commands:      
+      - echo Building the Docker image...
+      - docker build -t $CONTAINER_NAME:latest ./application
+      - docker tag $CONTAINER_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:latest
   post_build:
-    commands:
-      - echo post-build started on `date`
+    commands:      
       - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:latest
       - echo Creating the imagedefinitions artifact for CodeDeploy...
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPOSITORY:latest > imagedefinitions.json
 
 artifacts:
     files: imagedefinitions.json
