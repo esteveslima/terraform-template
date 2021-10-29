@@ -16,7 +16,7 @@ provider "aws" {
 }
 
 ############################################
-
+//TODO: kms encryption -> https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#enable-default-server-side-encryption
 resource "aws_s3_bucket" "terraform_state" {
   bucket = var.backend_s3_bucket
 

@@ -38,7 +38,16 @@ For a single account one approach is to use multiple .tfvars files(to assign sta
 
 Another approach could be to duplicate projects files in different paths to ensure enviroment segregation (e.g: projA/dev/... projA/prod/...).
 
-The first approach would use the same code but would require attention to not make a mistake using the wrong workspace, the second approach has more secure environment segregation but relies on code replication.
+The first approach would use the same code but would require attention to not make a mistake using the wrong workspace. To reduce human error, it's useful to create definitions as <workspace_name>.tfvars files and run changes with terraform as the example:
+```
+   $ terraform apply --var-file $(terraform workspace show).tfvars
+
+or if the .tfvars file is inside a folder
+
+   $ terraform apply --var-file <folder_path>/$(terraform workspace show).tfvars
+```
+This way, the changes to the current workspace will be always applied using it's correspondent file.
+
 
 Finally, for multiple accounts, the credentials profile could be parametrized using variables.
 

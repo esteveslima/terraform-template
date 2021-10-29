@@ -11,7 +11,7 @@ terraform {
     encrypt        = true
     dynamodb_table = "backend-s3-ddb-complex-workspaces"
     bucket         = "backend-s3-bucket-complex-workspaces"
-    key            = "template-base/terraform.tfstate"      # Key for state in s3 bucket(has a prefix for workspaces)
+    key            = "template-base/terraform.tfstate" # Key for state in s3 bucket(has a prefix for workspaces)
   }
 
   required_providers {
@@ -26,14 +26,20 @@ terraform {
 
 # It's possible to define multiple providers and select individually in each resource
 provider "aws" {
-  profile = var.profile   # It's possible to parametrize aws credentials profile to switch between accounts and also deploy in different environments
+  profile = var.profile # It's possible to parametrize aws credentials profile to switch between accounts and also deploy in different environments
   region  = var.region
+
+  default_tags {
+    tags = {
+      someDefaultTag = "value" # Default tag for all resources, which can be overrided
+    }
+  }
 }
 
 # Constants assignment(parametrizing for different workspaces)
 locals {
   local_name = "bar-complex-workspaces-${terraform.workspace}"
-  var_name = "${var.var_name}-${terraform.workspace}"
+  var_name   = "${var.var_name}-${terraform.workspace}"
 }
 
 ####################################################################################################
