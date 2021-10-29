@@ -1,5 +1,0 @@
-profile         = "aws-cloud"
-region          = "us-west-1"
-cidr_vpc        = "100.100.0.0/16"
-cidr_subnet_1   = "100.100.0.0/28"
-cidr_subnet_2   = "100.100.1.0/28"

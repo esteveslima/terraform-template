@@ -1,0 +1,1 @@
+Sample container to test, building and pushing manually for the example
