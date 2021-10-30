@@ -1,3 +1,5 @@
 # Base template managing environment with workspaces
 
-With few strategies could be used as monorepo
+
+### TODO: fix accordingly to monorepo example(most complete currently)
+### TODO: readme explaining folders/files structure
